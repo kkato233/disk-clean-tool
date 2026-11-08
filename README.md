@@ -26,7 +26,15 @@ macOS の場合は `dotnet run -- --list` で表示されたボリュームの�
 | `DiskCleanTool-osx-x64.zip` | macOS Intel |
 | `DiskCleanTool-osx-arm64.zip` | macOS Apple Silicon |
 
-これらは .NET ランタイムを同梱するため、利用者側に .NET 10 のインストールは不要です。ZIP を展開し、Windows では `.\DiskCleanTool.exe --list`、macOS では `./DiskCleanTool --list` を実行します。リリースには各 ZIP の SHA-256 を記載した `SHA256SUMS.txt` も添付します。macOS 版は現在コード署名・公証を行わないため、Gatekeeper の警告が表示される場合があります。一般向けに広く配布する前に、Apple Developer の署名・公証を設定してください。
+これらは .NET ランタイムを同梱するため、利用者側に .NET 10 のインストールは不要です。ZIP を展開し、Windows では `.\DiskCleanTool.exe --list`、macOS では `./DiskCleanTool --list` を実行します。リリースには各 ZIP の SHA-256 を記載した `SHA256SUMS.txt` も添付します。
+
+### macOS 版の寄付と署名方針
+
+macOS 版は寄付を推奨する形で配布します。寄付は任意であり、ダウンロードや利用の必須条件ではありません。支援先は [GitHub Sponsors (@kkato233)](https://github.com/sponsors/kkato233) です。スポンサー受付ページの公開までは受付準備中です。
+
+寄付金額の累計が **100 米ドル相当を超えたら**、Apple Developer Program に加入し、macOS 版の Developer ID 署名・公証への対応を進める方針です。それまでは macOS 版の署名・公証を行いません。100 米ドル相当ちょうどでは、この条件を満たしません。
+
+現在の macOS 版は未署名・未公証です。Gatekeeper により警告が表示されたり、実行がブロックされたりする場合があります。資金条件を満たしても、署名済み版が直ちに公開されるわけではありません。対応が完了したリリースで署名・公証状況を案内します。Windows EXE の署名方針とは別です。
 
 ## 目的と仕組み
 
