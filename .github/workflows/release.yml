@@ -1,0 +1,101 @@
+name: Prepare draft release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.rid }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+            archive: DiskCleanTool-win-x64-unsigned.zip
+          - os: macos-15-intel
+            rid: osx-x64
+            archive: DiskCleanTool-osx-x64.zip
+          - os: macos-latest
+            rid: osx-arm64
+            archive: DiskCleanTool-osx-arm64.zip
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish self-contained executable
+        run: dotnet publish DiskCleanTool.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained true --output publish
+
+      - name: Smoke test Windows executable
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          & .\publish\DiskCleanTool.exe --help
+          if ($LASTEXITCODE -ne 0) { throw "Executable smoke test failed." }
+
+      - name: Smoke test macOS executable
+        if: runner.os == 'macOS'
+        run: ./publish/DiskCleanTool --help
+
+      - name: Include documentation and license
+        shell: pwsh
+        run: |
+          Copy-Item README.md, LICENSE -Destination publish
+          Copy-Item docs -Destination publish -Recurse
+
+      - name: Package Windows executable
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path publish\* -DestinationPath ${{ matrix.archive }}
+
+      - name: Package macOS executable
+        if: runner.os == 'macOS'
+        run: cd publish && zip -r ../${{ matrix.archive }} .
+
+      - name: Upload packaged executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.rid }}
+          path: ${{ matrix.archive }}
+          if-no-files-found: error
+
+  release:
+    name: Create draft GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Download packaged executables
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Create draft with macOS assets only
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$RELEASE_TAG" \
+            --verify-tag --draft --generate-notes \
+            release-assets/DiskCleanTool-osx-*.zip
+
+      - name: Explain manual signing handoff
+        run: |
+          echo 'Draft created. Download the win-x64 Actions artifact, sign and verify the EXE, then upload the signed ZIP and final SHA256SUMS.txt before publishing. See docs/releasing.md.' >> "$GITHUB_STEP_SUMMARY"
