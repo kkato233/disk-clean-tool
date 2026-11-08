@@ -4,7 +4,7 @@
 
 ## 初期版 (.NET 10 コンソールアプリ)
 
-固定ドライブの空き領域にゼロを書き込む初期版です。必要なファイルの削除は行いません。実行には .NET 10 SDK が必要です。
+固定ドライブ (macOS ではマウントされたボリューム) の空き領域にゼロを書き込む初期版です。必要なファイルの削除は行いません。開発時にソースから実行する場合は .NET 10 SDK が必要です。
 
 ```powershell
 dotnet run -- --list
@@ -12,7 +12,21 @@ dotnet run -- --wipe-free-space C:\
 dotnet run -- --wipe-free-space D:\ --reserve-mb 2048
 ```
 
+macOS の場合は `dotnet run -- --list` で表示されたボリュームのマウント先 (例: `/Volumes/Disk/`) を指定します。
+
 既定では処理後に 1024 MiB の空き容量を残します。指定できる最小予約容量は 256 MiB です。書き込み前に対象ドライブのルートを含む確認文字列の入力が必要です。Ctrl+C で正常に中断した場合、一時ファイルは削除されますが、その時点までの書き込みは残ります。電源断などでプロセスが強制終了された場合、一時ファイルが残ることがあります。
+
+## ダウンロードとリリース
+
+公開済みの GitHub Releases から OS と CPU に合った ZIP をダウンロードしてください。`v` で始まるタグ (例: `v0.1.0`) を push すると GitHub Actions がビルドと起動確認を行い、下書き Release を作成します。Windows EXE の署名、配布物の確認、最終公開は手動です。詳しくは [署名とリリース手順](docs/releasing.md) を参照してください。
+
+| ファイル | 対象 |
+| --- | --- |
+| `DiskCleanTool-win-x64.zip` | Windows x64 |
+| `DiskCleanTool-osx-x64.zip` | macOS Intel |
+| `DiskCleanTool-osx-arm64.zip` | macOS Apple Silicon |
+
+これらは .NET ランタイムを同梱するため、利用者側に .NET 10 のインストールは不要です。ZIP を展開し、Windows では `.\DiskCleanTool.exe --list`、macOS では `./DiskCleanTool --list` を実行します。リリースには各 ZIP の SHA-256 を記載した `SHA256SUMS.txt` も添付します。macOS 版は現在コード署名・公証を行わないため、Gatekeeper の警告が表示される場合があります。一般向けに広く配布する前に、Apple Developer の署名・公証を設定してください。
 
 ## 目的と仕組み
 

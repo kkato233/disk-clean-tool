@@ -57,19 +57,21 @@ internal static class Program
             return 2;
         }
 
-        var fullPath = Path.GetFullPath(args[1]);
-        if (!Path.IsPathRooted(args[1]) ||
-            !string.Equals(fullPath, Path.GetPathRoot(fullPath), PathComparison))
+        if (!Path.IsPathRooted(args[1]))
         {
-            Console.Error.WriteLine("対象にはドライブのルート (例: C:\\) を指定してください。");
+            Console.Error.WriteLine("対象にはボリュームのルート (例: C:\\ または /Volumes/Disk/) を指定してください。");
             return 2;
         }
 
+        var fullPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1]));
         var drive = DriveInfo.GetDrives().FirstOrDefault(candidate =>
-            string.Equals(candidate.RootDirectory.FullName, fullPath, PathComparison));
+            string.Equals(
+                Path.TrimEndingDirectorySeparator(Path.GetFullPath(candidate.RootDirectory.FullName)),
+                fullPath,
+                PathComparison));
         if (drive is null)
         {
-            Console.Error.WriteLine($"ドライブが見つかりません: {fullPath}");
+            Console.Error.WriteLine($"使用可能なボリュームのルートが見つかりません: {fullPath}");
             return 1;
         }
 
@@ -210,11 +212,12 @@ internal static class Program
 
             使い方:
               DiskCleanTool --list
-              DiskCleanTool --wipe-free-space <ドライブルート> [--reserve-mb <MiB>]
+              DiskCleanTool --wipe-free-space <ボリュームのルート> [--reserve-mb <MiB>]
 
             例:
               DiskCleanTool --wipe-free-space C:\
               DiskCleanTool --wipe-free-space D:\ --reserve-mb 2048
+              DiskCleanTool --wipe-free-space /Volumes/Disk/
 
             --reserve-mb を省略した場合、空き容量を 1024 MiB 残します。
             実行前に対象ドライブとバックアップを確認してください。
